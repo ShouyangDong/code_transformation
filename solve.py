@@ -16,6 +16,7 @@ stmts: stmt*              -> stmts
 
 stmt: CNAME ":=" expr ";" -> assign
   | "for" CNAME "=" NUMBER "to" NUMBER "do" stmts "done" ";" -> for
+  | "for" CNAME "=" NUMBER "to" "(" start ")" "do" stmts "done" ";" -> for
 
 ?expr: sum
   | sum "?" sum ":" sum -> if
@@ -29,11 +30,17 @@ stmt: CNAME ":=" expr ";" -> assign
   | term "/"  item      -> div
   | term ">>" item      -> shr
   | term "<<" item      -> shl
+  | term "^"  item      -> pow
+
+?array: "[" start ("," start)* "]"
 
 ?item: NUMBER           -> num
   | "-" item            -> neg
   | CNAME               -> var
   | "(" start ")"
+  | array               -> arr
+  | "get" item array    -> get
+
 
 %import common.NUMBER
 %import common.WS
@@ -41,7 +48,8 @@ stmt: CNAME ":=" expr ";" -> assign
 %ignore WS
 """.strip()
 
-
+#   | var "[" index "]" -> onebit
+#   | var "[" index ":" index "]" -> bitsel
 # This function adapated from https://github.com/bcarlet/CS-6120/blob/main/task13/synth.py
 def interp(tree, lookup, assign):
     """Evaluate the arithmetic expression.
@@ -85,13 +93,19 @@ def interp(tree, lookup, assign):
         for child in tree.children:
             interp(child, lookup, assign)
     elif op == 'for':
+        # print("[INFO]**************children0: ", tree.children[0])
+        # print("[INFO]**************children1: ", tree.children[1])
+        # print("[INFO]**************children2: ", tree.children[2])
         var = tree.children[0]
         start = int(tree.children[1])
+        # TODO(dongshouyang): solve the problem that when the loop end is a start
         end = int(tree.children[2])
         for i in range(start, end + 1):
             assign(var, i)
             interp(tree.children[3], lookup, assign)
     elif op == 'start':
+        print("[INFO]**************lookup: ", lookup)
+        print("[INFO]**************assign: ", assign)
         interp(tree.children[0], lookup, assign)
         return interp(tree.children[1], lookup, assign)
 
@@ -292,13 +306,13 @@ def ex3(source):
     src1, src2 = source.strip().split('----')
     # print(f"Original src2: {src2}")
     src2 = desugar_hole(src2)  # Allow ?? in the sketch part.
-    # print(f"Desugared src2: {src2}")
+    print(f"Desugared src2: \n{src2}")
 
     parser = lark.Lark(GRAMMAR)
     tree1 = parser.parse(src1)
     # print(f"Sketch: {pretty(tree1)}")
     tree2 = parser.parse(src2)
-    # print(f"With holes: {pretty(tree2)}")
+    print(f"With holes: \n{pretty(tree2)}")
 
     model = synthesize(tree1, tree2)
 
