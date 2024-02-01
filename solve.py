@@ -93,19 +93,19 @@ def interp(tree, lookup, assign):
         for child in tree.children:
             interp(child, lookup, assign)
     elif op == 'for':
-        # print("[INFO]**************children0: ", tree.children[0])
-        # print("[INFO]**************children1: ", tree.children[1])
-        # print("[INFO]**************children2: ", tree.children[2])
         var = tree.children[0]
         start = int(tree.children[1])
-        # TODO(dongshouyang): solve the problem that when the loop end is a start
-        end = int(tree.children[2])
-        for i in range(start, end + 1):
-            assign(var, i)
-            interp(tree.children[3], lookup, assign)
+        # when the loop end is a start
+        if isinstance(tree.children[2], lark.tree.Tree):
+            interp(tree.children[2], lookup, assign)
+        else:
+            end = int(tree.children[2])
+            for i in range(start, end + 1):
+                assign(var, i)
+                interp(tree.children[3], lookup, assign)
     elif op == 'start':
-        print("[INFO]**************lookup: ", lookup)
-        print("[INFO]**************assign: ", assign)
+        # print("[INFO]**************lookup: ", lookup)
+        # print("[INFO]**************assign: ", assign)
         interp(tree.children[0], lookup, assign)
         return interp(tree.children[1], lookup, assign)
 
