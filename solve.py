@@ -218,7 +218,6 @@ def z3_expr(tree, vars=None):
 def solve(phi):
     """Solve a Z3 expression, returning the model.
     """
-
     s = z3.Solver()
     s.add(phi)
     s.check()
@@ -244,18 +243,19 @@ def synthesize(tree1, tree2):
 
     expr1, vars1 = z3_expr(tree1)
     expr2, _ = z3_expr(tree2, vars1.copy())
-
+    print("[INFO]***************vars1: ", expr2)
     # Filter out the variables starting with "h" to get the non-hole
     # variables.
     plain_vars = {k: v for k, v in vars1.items()
                   if not k.startswith('h')}
     
-    #print(f"Quantified vars: {plain_vars}")
+    print(f"Quantified vars: {plain_vars}")
 
-    #print(f"constraint: {expr1 == expr2}")
+    print(f"constraint: {expr1 == expr2}")
 
     goal = expr1 == expr2
     quantified_vars = list(plain_vars.values())
+    print(quantified_vars)
     if quantified_vars:
         goal = z3.ForAll(
             quantified_vars,  # For every valuation of variables...
